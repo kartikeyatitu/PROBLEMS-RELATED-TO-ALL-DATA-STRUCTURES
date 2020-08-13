@@ -2,6 +2,8 @@
 using namespace std;
 #define ll long long
 // ss and se for  node range ,qs and qe for query range
+int lazy[1000]={0};
+
 int query(int* tree,int ss,int se,int qs,int qe,int index)
 {
     //complete ovevrlap
@@ -62,7 +64,101 @@ void updatenode(int* tree,int ss,int se,int i,int incvalue,int index)
     tree[index]=min(tree[2*index],tree[2*index+1]);
     return;
 }
+// lazyupdate ke sath lazyquery nice
+int querylazy(int* tree,int ss,int se,int qs,int qe,int index)
+{
+
+    //first step resolve the lazy value
+    if(lazy[index]!=0)
+    {
+        tree[index]+=lazy[index];
+        if(ss!=se)
+        {
+            lazy[2*index]+=lazy[index];
+            lazy[2*index+1]+=lazy[index];
+        }
+        lazy[index]=0;
+    }
+     // no overlap
+      if(ss>qe ||se<qs)
+      {
+          return INT_MAX;
+      }
+      // complete ovrrlap
+        if(ss>=qs && se<=qe)
+        {
+            return tree[index];
+            //pehle hi resolve kar chucke hain lazy value so yaha direct return
+        }
+
+    // partial
+
+     int mid=(ss+se)/2;
+     int leftans=querylazy(tree,ss,mid,qs,qe,2*index);
+     int rightans=querylazy(tree,mid+1,se,qs,qe,2*index+1);
+     return min(leftans,rightans);
+
+
+
+
+}
+
 //ab range updatation ki baat hogi ok
+void updaterangelaze(int* tree,int ss,int se,int l,int r,int inc,int index)
+{
+    // never go down if you have a lazy  value at the nodee at which u r standing first reslove it
+    if(lazy[index]!=0)
+    {
+        tree[index]+=lazy[index];
+
+    //if not a leaf node
+    if(ss!=se)
+    {
+        lazy[2*index]+=lazy[index];
+        lazy[2*index+1]+=lazy[index];
+    }
+    lazy[index]=0;
+    }
+    //out of bounds case
+
+    if(r<ss || l>se)
+    {
+        return;
+    }
+    // complete overlap boht imporatnt hai isme
+    if(ss>=l && se<=r)
+    {
+        tree[index]+=inc;
+        if(ss!=se)
+        {
+          lazy[2*index]+=inc;
+          lazy[2*index+1]+=inc;
+
+        }
+        return;
+
+    }
+    int mid=(ss+se)/2;
+    updaterangelaze(tree,ss,mid, l,r,inc, 2*index);
+    updaterangelaze(tree,mid+1,se, l, r,inc,2*index+1);
+    tree[index]=min(tree[2*index],tree[2*index+1]);
+    return;
+
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+/*
 void updatearange(int* tree,int ss,int se,int l,int r,int incvalue,int index)
 {
      if(l>se || r<ss)
@@ -82,7 +178,7 @@ void updatearange(int* tree,int ss,int se,int l,int r,int incvalue,int index)
 
 
 }
-
+*/
 int main()
 {
   int a[]={1,3,2,-5,6,4};
@@ -96,13 +192,13 @@ int main()
 //  cout<<query(tree,0,n-1,l,r,1);
  // updatenode(tree,0,n-1,2,10,1);
   //updatenode(tree,0,n-1,3,15,1);
-  updatearange(tree,0,n-1,2,3,10,1);
+  updaterangelaze(tree,0,n-1,2,3,10,1);
   int queryno=6;
   while(queryno--)
   {
       int l,r;
       cin>>l>>r;
-     cout<< query(tree,0,n-1,l,r,1)<<endl;;
+     cout<< querylazy(tree,0,n-1,l,r,1)<<endl;;
 }
 
   return 0;
